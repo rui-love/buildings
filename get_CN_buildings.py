@@ -20,6 +20,22 @@ scaler = StandardScaler()
 geod = Geod(ellps="WGS84")
 
 
+def get_gdf_region(city):
+    """
+    获取区域的GeoDataFrame
+    """
+    os.makedirs(f"./data/data_{city}", exist_ok=True)
+
+    assert os.path.exists(
+        f"./data/data_{city}/region.geojson"
+    ), "Request data from the author"
+
+    gdf_region = gpd.read_file(f"./data/data_{city}/region.geojson")
+    print("gdf_region nums:", gdf_region.shape)
+
+    return gdf_region
+
+
 def get_footprint_from_osmnx(gdf_region):
     """
     从OSM中获取建筑物的轮廓
@@ -55,7 +71,7 @@ def get_footprint_from_osmnx(gdf_region):
     return gdf_building
 
 
-def download_tifs(regions):
+def download_height_tifs(regions):
     """
     下载CNBH10m的tifs, 用于获取建筑物的高度
 
@@ -125,7 +141,7 @@ def get_CN_building(gdf_region):
     获得区域建筑信息
     """
     gdf_building = get_footprint_from_osmnx(gdf_region)
-    tifs = download_tifs(gdf_region)
+    tifs = download_height_tifs(gdf_region)
     gdfs = []
     for X, Y in zip(tifs[0].flatten(), tifs[1].flatten()):
         print(f"loading CNBH10m_X{X}Y{Y}.tif")
@@ -161,16 +177,21 @@ def get_pop(gdf_region):
     """
     获得人口数据
     """
+    if not os.path.exists("./data/data_worldpop"):
+        os.mkdir("./data/data_worldpop")
+        world_pop_dir = "./data/data_worldpop/chn_ppp_2020_UNadj.tif"
+        url = "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/CHN/chn_ppp_2020_UNadj.tif"
+        subprocess.run(["wget", url, "-O", world_pop_dir], check=True)
     world_pop = rasterio.open("./data/data_worldpop/chn_ppp_2020_UNadj.tif")
 
-    def get_pop(x):
+    def pop(x):
         """
         辅助函数，获取区域内的人口数据
         """
         data = mask(world_pop, [x], crop=True)[0]
         return data[data > 0].sum()
 
-    gdf_region["pop_overall"] = gdf_region["geometry"].apply(get_pop)
+    gdf_region["pop_overall"] = gdf_region["geometry"].apply(pop)
     return gdf_region
 
 
@@ -190,6 +211,7 @@ def get_building_feature(gdf_region, result_gdf):
     gdf_region = gdf_region.fillna(0)
     gdf_region["building_density"] = gdf_region["area_sum"] / gdf_region["ALAND"]
     gdf_region["plot_ratio"] = gdf_region["volume_sum"] / gdf_region["ALAND"]
+
     return gdf_region
 
 
@@ -231,8 +253,7 @@ def dump_region2info(gdf_region):
 
 def main(city):
     # 读取区域的GeoDataFrame
-    gdf_region = gpd.read_file(f"./data/data_{city}/region.geojson")
-    print("gdf_region nums:", gdf_region.shape)
+    gdf_region = get_gdf_region(city)
 
     # 获取区域的人口数据
     gdf_region = get_pop(gdf_region)
@@ -253,16 +274,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--city", type=str, default="bj", choices=["bj", "jn", "sz"])
     args = parser.parse_args()
-
-    os.makedirs(f"./data/data_{args.city}", exist_ok=True)
-    assert os.path.exists(
-        f"./data/data_{args.city}/region.geojson"
-    ), "Request data from the author"
-
-    if not os.path.exists("./data/data_worldpop"):
-        os.mkdir("./data/data_worldpop")
-        world_pop_dir = "./data/data_worldpop/chn_ppp_2020_UNadj.tif"
-        url = "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/CHN/chn_ppp_2020_UNadj.tif"
-        subprocess.run(["wget", url, "-O", world_pop_dir], check=True)
 
     gdf_region = main(args.city)
