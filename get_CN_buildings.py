@@ -23,8 +23,10 @@ geod = Geod(ellps="WGS84")
 def get_footprint_from_osmnx(gdf_region):
     """
     从OSM中获取建筑物的轮廓
+
     Input:
         gdf_region: 区域的GeoDataFrame
+
     Output:
         gdf_building: 建筑物的GeoDataFrame
     """
@@ -56,10 +58,13 @@ def get_footprint_from_osmnx(gdf_region):
 def download_tifs(regions):
     """
     下载CNBH10m的tifs, 用于获取建筑物的高度
+
     Input:
         regions: 区域的GeoDataFrame
+
     Output:
         tifs: tif文件的坐标
+
     File:
         CNBH10m_X{X}Y{Y}.tif
     """
@@ -88,6 +93,13 @@ def download_tifs(regions):
 
 
 def visualize_region(gdf_region, result_gdf):
+    """
+    可视化区域和建筑数据
+
+    Input:
+        gdf_region: 区域的GeoDataFrame
+        result_gdf: 区域的建筑数据的GeoDataFrame
+    """
     m = folium.Map(
         location=[
             gdf_region["geometry"][0].centroid.y,
@@ -109,6 +121,9 @@ def visualize_region(gdf_region, result_gdf):
 
 
 def get_CN_building(gdf_region):
+    """
+    获得区域建筑信息
+    """
     gdf_building = get_footprint_from_osmnx(gdf_region)
     tifs = download_tifs(gdf_region)
     gdfs = []
@@ -143,9 +158,15 @@ def get_CN_building(gdf_region):
 
 
 def get_pop(gdf_region):
+    """
+    获得人口数据
+    """
     world_pop = rasterio.open("./data/data_worldpop/chn_ppp_2020_UNadj.tif")
 
     def get_pop(x):
+        """
+        辅助函数，获取区域内的人口数据
+        """
         data = mask(world_pop, [x], crop=True)[0]
         return data[data > 0].sum()
 
@@ -154,6 +175,9 @@ def get_pop(gdf_region):
 
 
 def get_building_feature(gdf_region, result_gdf):
+    """
+    计算区域统计特征到gdf_region中
+    """
     result_gdf["volume"] = result_gdf["area"] * result_gdf["height"]
     result_gdf_agg = (
         result_gdf.groupby("GEOID")
@@ -170,6 +194,9 @@ def get_building_feature(gdf_region, result_gdf):
 
 
 def dump_region2info(gdf_region):
+    """
+    保存数据
+    """
     gdf_region_normal = gdf_region[
         [
             "GEOID",
@@ -211,7 +238,7 @@ def main(city):
     gdf_region = get_pop(gdf_region)
 
     # 获取区域的建筑数据
-    result_gdf = get_CN_building(gdf_region)    # 包含可视化代码
+    result_gdf = get_CN_building(gdf_region)  # 包含可视化代码
 
     # 计算区域的建筑密度和容积率
     gdf_region = get_building_feature(gdf_region, result_gdf)

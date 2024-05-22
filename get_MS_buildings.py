@@ -22,6 +22,7 @@ geod = Geod(ellps="WGS84")
 def download_city(state_id, year):
     """
     Download the census tract data for a city
+
     Input:
         state_id: the state id of the city
         year: the year of the census tract data
@@ -37,8 +38,10 @@ def download_city(state_id, year):
 def get_gdf_region(city):
     """
     获取区域的geojson数据
+
     Input:
         city: 城市的名字
+
     Output:
         gdf_region: 区域的GeoDataFrame, 包含区域的geojson数据和其他Census Tract数据
     """
@@ -63,8 +66,10 @@ def get_gdf_region(city):
 def get_statistics(gdf_region):
     """
     获取区域的统计数据，数据从data.census.gov中获取
+
     Input:
         gdf_region: 区域的GeoDataFrame
+
     Output:
         gdf_region: 区域的GeoDataFrame, 包含区域的统计数据
     """
@@ -99,6 +104,7 @@ def get_statistics(gdf_region):
 def visualize_region(gdf_region, result_gdf):
     """
     可视化区域和建筑数据
+
     Input:
         gdf_region: 区域的GeoDataFrame
         result_gdf: 区域的建筑数据的GeoDataFrame
