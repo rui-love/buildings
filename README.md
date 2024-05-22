@@ -4,7 +4,7 @@ Deal with building features.
 ## get_buildings.py
 运行
 ```
-python get_buildings.py --city nyc
+python get_MS_buildings.py --city nyc
 ```
 获得`region2info_building.json`, 格式为:
 ```
@@ -32,3 +32,11 @@ github只上传了必要的数据:
 2. New York buildings数据
  
 程序中会自动下载
+
+## get_CN_buildings.py
+获得中国的建筑输入信息
+首先要设置端口号，梯子的设置中有相关信息
+```
+set http_proxy=http://127.0.0.1:1024
+set https_proxy=http://127.0.0.1:1024
+```

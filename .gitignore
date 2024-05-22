@@ -163,3 +163,10 @@ data/data_census_tract/*/
 data/data_nyc/building.geojson
 data/**/region2info_building.json
 data/**/visual.html
+data/data_census_tract/china_region.zip
+cache/
+data/data_worldpop/
+data/data_CNBH/*
+data/data_bj
+data/data_jn
+data/data_sz
