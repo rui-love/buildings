@@ -22,7 +22,7 @@ python get_MS_buildings.py --city nyc
 
 获得`visual.html`, 用红线标注census tract，用蓝线标注建筑轮廓
 
-## 数据
+### 数据
 github只上传了必要的数据: 
 1. census tract gov上下载的城市特征统计数据
 2. 城市的census tract id; 
