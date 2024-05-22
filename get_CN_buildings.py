@@ -227,7 +227,7 @@ if __name__ == "__main__":
     parser.add_argument("--city", type=str, default="bj", choices=["bj", "jn", "sz"])
     args = parser.parse_args()
 
-    os.mkdir(f"./data/data_{args.city}", exist_ok=True)
+    os.makedirs(f"./data/data_{args.city}", exist_ok=True)
     assert os.path.exists(
         f"./data/data_{args.city}/region.geojson"
     ), "Request data from the author"
