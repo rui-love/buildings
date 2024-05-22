@@ -202,16 +202,16 @@ def dump_region2info(gdf_region):
     print("region2info_building.json saved!")
 
 
-def main():
+def main(city):
     # 读取区域的GeoDataFrame
-    gdf_region = gpd.read_file(f"./data/data_{args.city}/region.geojson")
+    gdf_region = gpd.read_file(f"./data/data_{city}/region.geojson")
     print("gdf_region nums:", gdf_region.shape)
 
     # 获取区域的人口数据
     gdf_region = get_pop(gdf_region)
 
     # 获取区域的建筑数据
-    result_gdf = get_CN_building(gdf_region)
+    result_gdf = get_CN_building(gdf_region)    # 包含可视化代码
 
     # 计算区域的建筑密度和容积率
     gdf_region = get_building_feature(gdf_region, result_gdf)
@@ -233,9 +233,9 @@ if __name__ == "__main__":
     ), "Request data from the author"
 
     if not os.path.exists("./data/data_worldpop"):
-        os.mkdir(f"./data/data_worldpop")
+        os.mkdir("./data/data_worldpop")
         world_pop_dir = "./data/data_worldpop/chn_ppp_2020_UNadj.tif"
         url = "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/CHN/chn_ppp_2020_UNadj.tif"
-        subprocess.run(["wget", url, "-O", world_pop_dir])
+        subprocess.run(["wget", url, "-O", world_pop_dir], check=True)
 
-    gdf_region = main()
+    gdf_region = main(args.city)

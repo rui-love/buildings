@@ -21,7 +21,10 @@ geod = Geod(ellps="WGS84")
 
 def download_city(state_id, year):
     """
-    Download the census tract data for a city, given the state_id, year
+    Download the census tract data for a city
+    Input:
+        state_id: the state id of the city
+        year: the year of the census tract data
     """
     print("downloading census tract data, state id =", state_id)
     os.makedirs(f"data/data_census_tract/census_tract_{year}", exist_ok=True)
@@ -32,9 +35,16 @@ def download_city(state_id, year):
 
 
 def get_gdf_region(city):
-    # 获取区域的geojson数据
+    """
+    获取区域的geojson数据
+    Input:
+        city: 城市的名字
+    Output:
+        gdf_region: 区域的GeoDataFrame, 包含区域的geojson数据和其他Census Tract数据
+    """
+
     area_id = json.load(open(f"./data/data_{city}/regs.json"))
-    state_id = set([a[:2] for a in area_id])
+    state_id = {a[:2] for a in area_id}
     df_list = []
     for idx in state_id:
         census_tract_path = f"data/data_census_tract/census_tract_{args.year}/tl_{args.year}_{idx}_tract.zip"
@@ -51,6 +61,13 @@ def get_gdf_region(city):
 
 
 def get_statistics(gdf_region):
+    """
+    获取区域的统计数据，数据从data.census.gov中获取
+    Input:
+        gdf_region: 区域的GeoDataFrame
+    Output:
+        gdf_region: 区域的GeoDataFrame, 包含区域的统计数据
+    """
     population = pd.read_csv(
         "./data/data_census_gov/ACSST5Y2016.S0101-Data.csv", header=1
     )
@@ -80,6 +97,12 @@ def get_statistics(gdf_region):
 
 
 def visualize_region(gdf_region, result_gdf):
+    """
+    可视化区域和建筑数据
+    Input:
+        gdf_region: 区域的GeoDataFrame
+        result_gdf: 区域的建筑数据的GeoDataFrame
+    """
     m = folium.Map(location=[gdf_region["INTPTLAT"][0], gdf_region["INTPTLON"][0]])
     geojson_data = gdf_region.to_json()
     folium.GeoJson(
@@ -103,6 +126,9 @@ def visualize_region(gdf_region, result_gdf):
 
 
 def get_nyc_building(gdf_region):
+    """
+    获得纽约市的建筑数据，因为MS_building缺少纽约市的数据
+    """
     if not os.path.exists("./data/data_nyc/building.geojson"):
         subprocess.run(
             [
@@ -110,7 +136,8 @@ def get_nyc_building(gdf_region):
                 "https://data.cityofnewyork.us/api/geospatial/nqwf-w8eh?method=export&format=GeoJSON",
                 "-O",
                 "./data/data_nyc/building.geojson",
-            ]
+            ],
+            check=True,
         )
 
     building_json = json.load(open("./data/data_nyc/building.geojson", "r"))
@@ -137,6 +164,9 @@ def get_nyc_building(gdf_region):
 
 
 def get_MS_building(gdf_region):
+    """
+    获得MS_building数据集中的建筑数据
+    """
     min_lon, min_lat, max_lon, max_lat = gdf_region["geometry"].total_bounds
     tiles = list(mercantile.tiles(min_lon, min_lat, max_lon, max_lat, zooms=9))
     quad_keys = list(set([int(mercantile.quadkey(tile)) for tile in tiles]))
@@ -173,6 +203,9 @@ def get_MS_building(gdf_region):
 
 
 def get_building_feature(gdf_region, result_gdf):
+    """
+    计算区域统计特征到gdf_region中
+    """
     result_gdf["volume"] = result_gdf["area"] * result_gdf["height"]
     result_gdf_agg = (
         result_gdf.groupby("GEOID")
@@ -189,6 +222,9 @@ def get_building_feature(gdf_region, result_gdf):
 
 
 def dump_region2info(gdf_region):
+    """
+    保存数据
+    """
     gdf_region_normal = gdf_region[
         [
             "GEOID",
@@ -234,9 +270,9 @@ def main(city):
 
     # 获取区域的建筑数据
     if city == "nyc":
-        result_gdf = get_nyc_building(gdf_region)  # 包含可视化程序
+        result_gdf = get_nyc_building(gdf_region)  # 包含可视化代码
     else:
-        result_gdf = get_MS_building(gdf_region)  # 包含可视化程序
+        result_gdf = get_MS_building(gdf_region)  # 包含可视化代码
 
     # 计算区域的建筑密度和容积率
     gdf_region = get_building_feature(gdf_region, result_gdf)
