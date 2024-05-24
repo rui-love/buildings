@@ -163,10 +163,7 @@ def get_CN_building(gdf_region):
 
     visualize_region(gdf_region, gdf)
 
-    gdf["area"] = gdf["geometry"].apply(
-        lambda x: abs(geod.geometry_area_perimeter(x)[0])
-    )
-    result_gdf = gdf[["area", "height", "GEOID"]]
+    result_gdf = gdf[["height", "GEOID", "geometry"]]
 
     print("building nums =", result_gdf.shape[0])
 
@@ -199,10 +196,35 @@ def get_building_feature(gdf_region, result_gdf):
     """
     计算区域统计特征到gdf_region中
     """
+
+    def calculate_ERI(polygon):
+        polygon_area = polygon.area
+        min_rect = polygon.minimum_rotated_rectangle
+        rect_area = min_rect.area
+        scale_factor = polygon_area / rect_area
+
+        min_rect = polygon.minimum_rotated_rectangle
+        ear_perimeter = scale_factor * min_rect.length
+        polygon_perimeter = polygon.length
+
+        ERI = ear_perimeter / polygon_perimeter
+        return ERI
+
+    result_gdf["complexity"] = result_gdf["geometry"].apply(calculate_ERI)
+    result_gdf["area"] = result_gdf["geometry"].apply(
+        lambda x: abs(geod.geometry_area_perimeter(x)[0])
+    )
     result_gdf["volume"] = result_gdf["area"] * result_gdf["height"]
     result_gdf_agg = (
         result_gdf.groupby("GEOID")
-        .agg({"area": ["mean", "sum"], "height": "mean", "volume": "sum"})
+        .agg(
+            {
+                "area": ["mean", "sum"],
+                "height": "mean",
+                "volume": "sum",
+                "complexity": "mean",
+            }
+        )
         .reset_index()
     )
     result_gdf_agg.columns = ["_".join(col) for col in result_gdf_agg.columns.values]
@@ -211,7 +233,6 @@ def get_building_feature(gdf_region, result_gdf):
     gdf_region = gdf_region.fillna(0)
     gdf_region["building_density"] = gdf_region["area_sum"] / gdf_region["ALAND"]
     gdf_region["plot_ratio"] = gdf_region["volume_sum"] / gdf_region["ALAND"]
-
     return gdf_region
 
 
@@ -226,6 +247,7 @@ def dump_region2info(gdf_region):
             "pop_overall",
             "area_mean",
             "height_mean",
+            "complexity_mean",
             "building_density",
             "plot_ratio",
         ]
@@ -238,6 +260,7 @@ def dump_region2info(gdf_region):
             "pop_overall": int(gdf_region["pop_overall"].iloc[i]),
             "area_mean": gdf_region["area_mean"].iloc[i],
             "height_mean": gdf_region["height_mean"].iloc[i],
+            "complexity_mean": gdf_region["complexity_mean"].iloc[i],
             "building_density": gdf_region["building_density"].iloc[i],
             "plot_ratio": gdf_region["plot_ratio"].iloc[i],
             "feature": gdf_region_normal.iloc[i, 1:].values.tolist(),
