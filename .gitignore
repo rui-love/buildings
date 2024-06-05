@@ -170,5 +170,7 @@ data/data_CNBH/*
 data/data_bj
 data/data_jn
 data/data_sz
-data/bldg
+data/bldg/*
+!data/bldg/cities.json
 test.ipynb
+plot

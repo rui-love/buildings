@@ -1,0 +1,59 @@
+{
+    "America": [
+        "New York",
+        "San Francisco",
+        "Los Angeles",
+        "Boston",
+        "Toronto",
+        "Vancouver",
+        "Mexico City",
+        "Sao Paulo",
+        "Buenos Aires"
+    ],
+    "Europe": [
+        "Amsterdam",
+        "Athens",
+        "Berlin",
+        "Brussels",
+        "Hamburg",
+        "Istanbul",
+        "Lisbon",
+        "London",
+        "Madrid",
+        "Manchester",
+        "Milan",
+        "Munich",
+        "Paris",
+        "Rome",
+        "Vienna",
+        "Delft"
+    ],
+    "Eastern_Europe": [
+        "Kiev",
+        "Minsk",
+        "Moscow",
+        "Saint Petersburg",
+        "Warsaw"
+    ],
+    "Australia": [
+        "Sydney",
+        "Melbourne",
+        "Canberra"
+    ],
+    "East_Asia": [
+        "Singapore",
+        "Chennai",
+        "Kampala",
+        "Hong Kong",
+        "Seoul",
+        "Osaka",
+        "Bangkok",
+        "Guangzhou",
+        "Shanghai",
+        "Tokyo",
+        "Beijing",
+        "Wuhan",
+        "Tianjin",
+        "Changsha"
+    ]
+}
