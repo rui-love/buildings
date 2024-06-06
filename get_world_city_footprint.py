@@ -28,15 +28,17 @@ def download_city_bounds(city, bounds_file):
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
-        print("#" * 10 + f"Error: {city}" + "#" * 10)
+        print("#" * 10 + f"Error@geocode_to_gdf: {city}" + "#" * 10)
         with open("./data/bldg/error.log", "a") as f:
-            f.write("#" * 20 + f"Error: {city}" + "#" * 20 + "\n")
+            f.write("#" * 20 + f"Error@geocode_to_gdf: {city}" + "#" * 20 + "\n")
             f.write(str(e) + "\n")
         return None
 
 
 def download_one_city_building_footprint(city, bounds_gdf, buildings_file):
     try:
+        if city == None:
+            raise Exception("city is None")
         gdf_building = ox.features_from_place(city, tags={"building": True})
     except KeyboardInterrupt:
         sys.exit()
@@ -89,7 +91,13 @@ def visualize_city_footprint(bounds_gdf, buildings_gdf, visual_file):
         bounds_gdf: 区域的GeoDataFrame
         buildings_gdf: 区域的建筑数据的GeoDataFrame
     """
-    m = folium.Map(location=[bounds_gdf["INTPTLAT"][0], bounds_gdf["INTPTLON"][0]])
+    if os.path.exists(visual_file):
+        print("visual file exists:", visual_file)
+        return
+    left, bottom, right, top = bounds_gdf.total_bounds
+    lon = (left + right) / 2
+    lat = (bottom + top) / 2
+    m = folium.Map(location=[lat, lon], zoom_start=12)
     geojson_data = bounds_gdf.to_json()
     folium.GeoJson(
         geojson_data,
@@ -120,6 +128,9 @@ def download_worldpop_raster(
     save_tif=True,
     chunk_size=1024,
 ):
+    if os.path.exists(buildings_meta_file):
+        print("buildings_meta file exists:", buildings_meta_file)
+        return
     base_url = "https://worldpop.arcgis.com/arcgis/rest/services/WorldPop_Total_Population_100m/ImageServer/exportImage?f=image&format=tiff&noData=0&"
 
     try:
@@ -129,9 +140,12 @@ def download_worldpop_raster(
             response = requests.get(url, stream=True, timeout=100)
             response.raise_for_status()
             if save_tif:
-                with open(worldpop_file) as f:
-                    for chunk in response.iter_content(chunk_size=chunk_size):
-                        f.write(chunk)
+                # with open(
+                #     worldpop_file,
+                # ) as f:
+                #     for chunk in response.iter_content(chunk_size=chunk_size):
+                #         f.write(chunk)
+                pass
             tiff_data = BytesIO(response.content)
             raster = rasterio.open(tiff_data)
         else:
@@ -164,7 +178,7 @@ def download_worldpop_raster(
             buildings_meta.sum(),
             np.mean(buildings_meta),
         )
-        np.save(buildings_meta, buildings_meta_file)
+        np.save(buildings_meta_file, buildings_meta)
 
     except KeyboardInterrupt:
         sys.exit()

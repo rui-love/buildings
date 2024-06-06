@@ -174,3 +174,4 @@ data/bldg/*
 !data/bldg/cities.json
 test.ipynb
 plot
+data_interface
